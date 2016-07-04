@@ -1,10 +1,12 @@
  <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+
   <string name="app_name">mc`s vpn</string>
   <string name="screen_name" translatable="false">mc`s vpn</string>
 
   <string name="quick_toggle">Toggle</string>
+
 
 
   <!-- global/misc category -->
