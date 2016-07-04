@@ -39,8 +39,8 @@
 package com.github.shadowsocks
 
 import android.content.{BroadcastReceiver, Context, Intent}
-import com.github.shadowsocks.helper.TaskerSettings
-import com.github.shadowsocks.utils.Utils
+import com.github.shadowsocks.utils.{TaskerSettings, Utils}
+import com.github.shadowsocks.ShadowsocksApplication.app
 
 /**
   * @author CzBiX
@@ -48,13 +48,12 @@ import com.github.shadowsocks.utils.Utils
 class TaskerReceiver extends BroadcastReceiver {
   override def onReceive(context: Context, intent: Intent) {
     val settings = TaskerSettings.fromIntent(intent)
-    val switched = ShadowsocksApplication.profileManager.getProfile(settings.profileId) match {
+    val switched = app.profileManager.getProfile(settings.profileId) match {
       case Some(p) =>
-        Utils.stopSsService(context)
-        ShadowsocksApplication.switchProfile(settings.profileId)
+        app.switchProfile(settings.profileId)
         true
       case _ => false
     }
-    if (settings.switchOn) Utils.startSsService(context) else if (!switched) Utils.stopSsService(context)
+    if (settings.switchOn) Utils.startSsService(context) else Utils.stopSsService(context)
   }
 }

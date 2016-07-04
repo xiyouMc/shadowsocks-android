@@ -53,7 +53,7 @@ class ShadowsocksVpnThread(vpnService: ShadowsocksVpnService) extends Thread {
   import ShadowsocksVpnThread._
 
   val TAG = "ShadowsocksVpnService"
-  val PATH = "/data/data/com.github.shadowsocks/protect_path"
+  lazy val PATH = vpnService.getApplicationInfo.dataDir + "/protect_path"
 
   @volatile var isRunning: Boolean = true
   @volatile var serverSocket: LocalServerSocket = null
@@ -66,7 +66,7 @@ class ShadowsocksVpnThread(vpnService: ShadowsocksVpnService) extends Thread {
         case _: Exception => // ignore
       }
       serverSocket = null
-      }
+    }
   }
 
   def stopThread() {
