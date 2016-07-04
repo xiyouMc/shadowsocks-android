@@ -10,6 +10,7 @@ import android.support.v4.app.NotificationCompat.BigTextStyle
 import android.support.v4.content.ContextCompat
 import com.github.shadowsocks.aidl.IShadowsocksServiceCallback.Stub
 import com.github.shadowsocks.utils.{TrafficMonitor, Action, State, Utils}
+import com.github.shadowsocks.ShadowsocksApplication.app
 
 /**
   * @author Mygod
@@ -30,7 +31,6 @@ class ShadowsocksNotification(private val service: BaseService, profileName: Str
   }
   private var lockReceiver: BroadcastReceiver = _
   private var callbackRegistered: Boolean = _
-  private var started: Boolean = _
 
   private val builder = new NotificationCompat.Builder(service)
     .setWhen(0)
@@ -40,8 +40,14 @@ class ShadowsocksNotification(private val service: BaseService, profileName: Str
     .setContentIntent(PendingIntent.getActivity(service, 0, new Intent(service, classOf[Shadowsocks])
       .setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT), 0))
     .setSmallIcon(R.drawable.ic_stat_shadowsocks)
-    .addAction(android.R.drawable.ic_menu_close_clear_cancel, service.getString(R.string.stop),
-      PendingIntent.getBroadcast(service, 0, new Intent(Action.CLOSE), 0))
+  if (!ShadowsocksTileService.running) builder.addAction(R.drawable.ic_navigation_close,
+    service.getString(R.string.stop), PendingIntent.getBroadcast(service, 0, new Intent(Action.CLOSE), 0))
+  app.profileManager.getAllProfiles match {
+    case Some(profiles) => if (profiles.length > 1)
+      builder.addAction(R.drawable.ic_action_settings, service.getString(R.string.quick_switch),
+        PendingIntent.getActivity(service, 0, new Intent(Action.QUICK_SWITCH), 0))
+    case _ =>
+  }
   private lazy val style = new BigTextStyle(builder)
   private val showOnUnlock = visible && Utils.isLollipopOrAbove
   private var isVisible = true
@@ -77,9 +83,10 @@ class ShadowsocksNotification(private val service: BaseService, profileName: Str
     show()
   } else if (forceShow) show()
 
-  def show() = if (started) nm.notify(1, builder.build) else {
+  private lazy val intent = new Intent(service, service.getClass)
+  def show() = {
+    service.startService(intent)
     service.startForeground(1, builder.build)
-    started = true
   }
 
   def destroy() {
@@ -89,6 +96,7 @@ class ShadowsocksNotification(private val service: BaseService, profileName: Str
     }
     unregisterCallback
     service.stopForeground(true)
+    service.stopService(intent)
     nm.cancel(1)
   }
 }
